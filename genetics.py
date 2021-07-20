@@ -1,10 +1,11 @@
 import math
-import os
-from random import randint, uniform, random
 import random
+from random import randint, random, uniform, seed
+
+import numpy as np
+
 from Dataset import Dataset
 from Graph import Graph
-import numpy as np
 
 
 class GET:
@@ -12,13 +13,13 @@ class GET:
     verbose = True  # Print running output
     alpha = 0.5  # Probability of Epidemic Spread
     profile_length = 16  # Profile Length
-    num_epidemics = 50  # Number of Sampled Epidemics
+    num_epidemics = 1  # Number of Sampled Epidemics
     short_epidemic = 3  # Meaningful Epidemic Length
     short_retries = 5  # Retry Short Epidemics
     final_test_len = 50  # Final Test Length
     runs = 30  # Number of Runs
-    mating_events = 40000  # Number of Mating Events
-    reporting_interval = 400  # Reporting Interval
+    mating_events = 500000  # Number of Mating Events
+    reporting_interval = 5000  # Reporting Interval
     num_commands = 9  # Number of commands
     min_deg_swap = 2  # Minimum degree for swap
     popsize = 1000  # Number of chromosomes
@@ -43,10 +44,10 @@ class GET:
               @param profileNum Epidemic profile number (1-9)
          @param outputPath Output location
          @param densities  Command densities
-    
+
     """
 
-    def __init__(self, densities: list, output_path: str, profile_num: int = None):
+    def __init__(self, profile_num: int, densities: list, output_path: str):
         self.profile_num = profile_num
         # self.profile = np.zeros(self.verts)
         self.fitness = np.zeros(self.popsize)  # float list
@@ -67,10 +68,10 @@ class GET:
 
         # profile_path = "./Profiles/Profile" + str(profile_num) + ".dat"  # Profile name
         # self.profile_path = "Profiles/Profile" + str(profile_num) + ".dat"  # Profile name
-        # self.initalg()
+        self.initalg()
 
     def run(self):
-        print("profile_num", self.profile_num)
+        # print("profile_num", self.profile_num)
         for run in range(self.runs):
             run_output = ''
             self.init_pop()
@@ -124,6 +125,10 @@ class GET:
         self.fitness[int(self.sort_index[0])] = self.fitness_length(child1)
         self.fitness[int(self.sort_index[1])] = self.fitness_length(child2)
 
+        # Skeptical tournament selection
+        self.fitness[int(self.sort_index[self.tourn_size - 2])] = self.fitness_length(parent1)
+        self.fitness[int(self.sort_index[self.tourn_size - 1])] = self.fitness_length(parent2)
+
         self.pop[int(self.sort_index[0])] = child1
         self.pop[int(self.sort_index[1])] = child2
 
@@ -141,8 +146,8 @@ class GET:
             # add "gene_length" number of valid_loci() to pop[i]
             self.pop[i] = [self.valid_loci() for _ in range(self.gene_length)]
             # fixme
-            # self.fitness[i] = self.fitness_pm(self.pop[i])
             self.fitness[i] = self.fitness_length(self.pop[i])
+            # self.fitness[i] = self.fitness_length(self.pop[i])
             self.sort_index[i] = i  # Initialize order
 
     def valid_loci(self):
@@ -158,7 +163,8 @@ class GET:
 
     # Initialize the algorithm by seeding the random number generator and reading profile
     def init_algorithm(self):
-        random.seed(self.seed)  # seed for rand ints
+        print()
+        # random.seed(self.seed) # seed for rand ints
         # try:
         # input_file = open(self.profile_path)
         # for i in range(self.verts):
@@ -169,9 +175,9 @@ class GET:
         #     for token in tokens.split():
         #         self.profile[i] = int(float(token))
         #         i += 1
-        # # for i in range(1, self.profile_length):
-        # #
-        # # Print profile
+        # for i in range(1, self.profile_length):
+        #
+        # Print profile
         # if self.verbose:
         #     print("\tProfile: ")
         #
@@ -213,15 +219,14 @@ class GET:
                             not_sorted = True
 
     def fitness_length(self, cmd):
-        acc = 0
+        # acc = 0
         G = Graph()  # Graph
         self.express(G, cmd)
-        for e in range(self.num_epidemics):
-            # Epidemic Length
-            G.SIRLength(self.alpha)
-            acc += G.getLen()
-
-        return acc / self.num_epidemics
+        G.SIRLength(self.alpha)
+        # for e in range(self.num_epidemics):
+        #     # Epidemic Length
+        # acc += G.getLen()
+        return G.getLen()
 
     def fitness_pm(self, cmd):
         trials = []
@@ -287,7 +292,7 @@ class GET:
                 continue
         G.setCreated()
 
-    def report_best(self, run, is_pm=True):
+    def report_best(self, run: int, is_pm: bool = True) -> None:
         # StringBuilder output = new StringBuilder(); // What this method outputs
         output = ''
         G = Graph(self.verts)  # To hold final graph from run
@@ -323,15 +328,21 @@ class GET:
         self.print_to_file(self.out_path + "best.lint", output)
 
     def print_to_file(self, path: str, to_write: str):
-        f = open("results_length/profile" + str(self.profile_num) + "/" + path, "a")
+        f = open(path, "w")
         # f = open("results/profile" + str(self.profile_num) + "/" + path, "a")
         f.write(to_write)
         f.close()
 
 
 param_file = open('params.txt')
+params = []
 for param_line in param_file.readlines():
-    params = [float(param) for param in param_line.split()]
-    a = GET(densities=params,
-            output_path='out', profile_num=1)
+    params.append([float(param) for param in param_line.split()])
+    pass
+
+# Use this to choose which parameter setting to run
+# You will run 0-3 and I will run 4-7
+# param_to_run = 7
+for param_to_run in range(3, 4):
+    a = GET(0, params[param_to_run], './results_length/exp' + str(param_to_run) + "/")
     a.run()

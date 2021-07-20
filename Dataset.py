@@ -105,4 +105,4 @@ class Dataset:
         if not self.computed:
             self.compute()
 
-        return str(self.mu) + " " + str(self.CI95) + " " + str(self.sd) + " " + str(self.min) + "\n"
+        return str(self.mu) + " " + str(self.CI95) + " " + str(self.sd) + " " + str(self.max) + "\n"
