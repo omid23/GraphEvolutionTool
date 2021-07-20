@@ -46,9 +46,9 @@ class GET:
     
     """
 
-    def __init__(self, profile_num: int, densities: list, output_path: str):
+    def __init__(self, densities: list, output_path: str, profile_num: int = None):
         self.profile_num = profile_num
-        self.profile = np.zeros(self.verts)
+        # self.profile = np.zeros(self.verts)
         self.fitness = np.zeros(self.popsize)  # float list
         self.sort_index = [i for i in range(self.popsize)]  # int list
         self.cmd_density = densities
@@ -56,7 +56,7 @@ class GET:
 
         if self.verbose:
             print("CORE")
-            print("\tProfile Number: " + str(profile_num))
+            # print("\tProfile Number: " + str(profile_num))
             print("\tOutput Location: " + self.out_path)
             print("\tCommand Densities : ")
             for i in range(self.num_commands):
@@ -66,8 +66,8 @@ class GET:
             # Grab information from command line arguments
 
         # profile_path = "./Profiles/Profile" + str(profile_num) + ".dat"  # Profile name
-        self.profile_path = "Profiles/Profile" + str(profile_num) + ".dat"  # Profile name
-        self.initalg()
+        # self.profile_path = "Profiles/Profile" + str(profile_num) + ".dat"  # Profile name
+        # self.initalg()
 
     def run(self):
         print("profile_num", self.profile_num)
@@ -141,8 +141,8 @@ class GET:
             # add "gene_length" number of valid_loci() to pop[i]
             self.pop[i] = [self.valid_loci() for _ in range(self.gene_length)]
             # fixme
-            self.fitness[i] = self.fitness_pm(self.pop[i])
-            # self.fitness[i] = self.fitness_length(self.pop[i])
+            # self.fitness[i] = self.fitness_pm(self.pop[i])
+            self.fitness[i] = self.fitness_length(self.pop[i])
             self.sort_index[i] = i  # Initialize order
 
     def valid_loci(self):
@@ -160,25 +160,25 @@ class GET:
     def init_algorithm(self):
         random.seed(self.seed)  # seed for rand ints
         # try:
-        input_file = open(self.profile_path)
-        for i in range(self.verts):
-            self.profile[i] = 0  # Clear profile
-        self.profile[0] = 1  # Patient zero
-        i = 0
-        for tokens in input_file.readlines():
-            for token in tokens.split():
-                self.profile[i] = int(float(token))
-                i += 1
-        # for i in range(1, self.profile_length):
+        # input_file = open(self.profile_path)
+        # for i in range(self.verts):
+        #     self.profile[i] = 0  # Clear profile
+        # self.profile[0] = 1  # Patient zero
+        # i = 0
+        # for tokens in input_file.readlines():
+        #     for token in tokens.split():
+        #         self.profile[i] = int(float(token))
+        #         i += 1
+        # # for i in range(1, self.profile_length):
+        # #
+        # # Print profile
+        # if self.verbose:
+        #     print("\tProfile: ")
         #
-        # Print profile
-        if self.verbose:
-            print("\tProfile: ")
-
-            for i in range(self.profile_length):
-                print(str(self.profile[i]) + " ")
-
-            print()
+        #     for i in range(self.profile_length):
+        #         print(str(self.profile[i]) + " ")
+        #
+        #     print()
         # except:
         #     print("ERROR: File '" + self.profile_path + "' Not Found")
 
@@ -332,6 +332,6 @@ class GET:
 param_file = open('params.txt')
 for param_line in param_file.readlines():
     params = [float(param) for param in param_line.split()]
-    a = GET(1, params,
-            'out')
+    a = GET(densities=params,
+            output_path='out', profile_num=1)
     a.run()
